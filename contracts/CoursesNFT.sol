@@ -6,6 +6,7 @@ import "./PrimaryNFT.sol";
 //import "./MetableNFT.sol";
 
 contract CoursesNFT is PrimaryNFT, SmartOnly {
+    ///@dev Storage info about NFT metadata
     mapping(uint256 => string) internal mapMetadata;
 
     //MetableNFT smartNFT;
@@ -14,15 +15,29 @@ contract CoursesNFT is PrimaryNFT, SmartOnly {
     }
 
 
+    /**
+     * @dev Mint new NFT to sender
+     * 
+     * Emits a {Transfer} event.
+     * 
+     * @param Metadata The string type metadata of token
+     */
     function Mint(string memory Metadata) public {
 
-        //address to = address(this);
+        
         uint256 tokenId = _NewToken(msg.sender);
 
         mapMetadata[tokenId] = Metadata;
     }
 
 
+    /**
+     * @dev Token transfer, called from other smart contracts
+     * 
+     * @param from The sender's address
+     * @param to The recipient's address
+     * @param tokenId The token id
+     */
     function SmartTransferTo(address from, address to, uint256 tokenId)
         external
         onlySmart
@@ -33,6 +48,12 @@ contract CoursesNFT is PrimaryNFT, SmartOnly {
         return true;
     }
 
+    /**
+     * @dev Set metadata to token
+     * 
+     * @param tokenId The token id
+     * @param Metadata The string type metadata of token
+     */
     function setMetadata(uint256 tokenId, string memory Metadata)
         public
         onlyNFTOwner(tokenId)
@@ -44,6 +65,12 @@ contract CoursesNFT is PrimaryNFT, SmartOnly {
 
     //View
 
+    /**
+     * @dev Retrieves value of token metadata
+     * 
+     * @param tokenId The token id
+     * @return The metadata of token
+     */
     function getMetadata(uint256 tokenId)
         public
         view
