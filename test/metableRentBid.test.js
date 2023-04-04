@@ -3,6 +3,7 @@ const { ethers } = require("hardhat");
 const LAND = "land";
 const BUILD = "build";
 const PriceSale = "30000000000000000000";
+const PriceRent = "3000000000000000000";
 const newPriceSale = "45000000000000000000";
 
 describe("MetableRentBid methods", async function () {
@@ -17,7 +18,7 @@ describe("MetableRentBid methods", async function () {
     this.utility = await this.gameToken.deploy();
     await this.utility.Mint("1000000000000000000000");
     await this.utility.setSale("500000000000000000000", PriceToken);
-    
+
     await this.utility.buyToken({ value: 200 * PriceToken });
     let ut2 = await this.utility.connect(this.owner2);
     await ut2.buyToken({ value: 200 * PriceToken });
@@ -44,6 +45,11 @@ describe("MetableRentBid methods", async function () {
   });
 
   // setRentBid
+  it('should be possible to setRentBid', async function () {
+    // owner1 buys token 3, a school with 3 rent slots
+    await this.metable.buyNFT(3);
+    await this.metable.setRentBid(3, PriceRent, 1, 1);
+  });
   // removeRentBid
   // buyRentBid
   // buyRentSchoolBid

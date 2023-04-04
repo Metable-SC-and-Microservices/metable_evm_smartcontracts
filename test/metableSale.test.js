@@ -22,9 +22,6 @@ describe("MetableSale methods", async function () {
     await ut2.buyToken({ value: 200 * PriceToken });
     expect(await this.utility.balanceOf(this.utility.address)).to.be.equal("600000000000000000000");
 
-    console.log(await this.utility.balanceOf(this.owner1.address));
-    console.log(await this.utility.balanceOf(this.owner2.address));
-
     this.course = await this.courseNFT.deploy();
     this.metable = await this.metableFactory.deploy(this.utility.address, this.course.address,);
     await this.utility.setSmart(this.metable.address);

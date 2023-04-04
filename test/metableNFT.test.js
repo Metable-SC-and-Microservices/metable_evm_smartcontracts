@@ -85,6 +85,17 @@ describe("MetableNFT methods", async function () {
     await this.metable.linkToNFT(1, 2);
     const info1 = await this.metable.getInfo(1);
     expect(info1.ParentLink).to.be.equal(2);
+  }); 
+
+  it("should not linkToNFT if not parentId owner", async function () {
+    // owner1 owns 1,2
+    // owner2 buys 3
+    let met2 = this.metable.connect(this.owner2);
+    await met2.buyNFT(3);
+    await expect(met2.linkToNFT(3, 1)).to.be.revertedWith("linkToNFT::Error Parent owner");
+  });
+  it("should not linkToNFT of not NFT owner", async function () {
+    await expect(this.metable.linkToNFT(3, 1)).to.be.revertedWith("Error NFT owner");
   });
 
 
