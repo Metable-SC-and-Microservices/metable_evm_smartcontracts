@@ -4,6 +4,7 @@ const LAND = "land";
 const BUILD = "build";
 const PriceSale = "30000000000000000000";
 const newPriceSale = "45000000000000000000";
+const PriceRent = "3000000000000000000";
 
 describe("MetableRent methods", async function () {
   before(async function () {
@@ -38,12 +39,31 @@ describe("MetableRent methods", async function () {
     await this.metable.Mint(LAND, "land", Meta2, 3, 0, PriceSale, 1);//2
     await this.metable.Mint(BUILD, "school", Meta3, 6, 3, PriceSale, 1);//3
     await this.metable.Mint(BUILD, "hospital", Meta4, 8, 2, PriceSale, 1);//4
-    await this.metable.Mint(BUILD, "hospital", Meta5, 8, 0, PriceSale, 1);//5
-    await this.metable.Mint(BUILD, "school", Meta6, 6, 0, PriceSale, 1);//6
+    await this.metable.Mint(BUILD, "hospital", Meta5, 8, 3, PriceSale, 1);//5
+    await this.metable.Mint(BUILD, "school", Meta6, 6, 4, PriceSale, 1);//6
 
   });
 
   // rentToken
-  // rentUser
+  it("should be possible to rentToken", async function(){
+    var info = await this.metable.rentToken(3);
+    await this.metable.buyNFT(3);
+    await this.metable.setRentBid(3, PriceRent, 1, 1);
+    let bidList = await this.metable.listRentBid(0, 10);
+    expect(bidList[0].ID).to.be.equal(3);
+    info = await this.metable.rentToken(3);
+  });
+  
+  it("should be possible to rentUser", async function(){
+    await this.metable.buyNFT(5);
+    await this.metable.setRentBid(5, PriceRent, 360000, 1);
+    let met2 = await this.metable.connect(this.owner2);
+    await met2.buyRentBid(5, 1);
+    var info = await this.metable.rentToken(5);
+    console.log('rentToken',info);
+
+    var rentUseraddr = await this.metable.rentUser(5, 0);
+    expect(rentUseraddr).to.be.equal(this.owner2.address);
+  });
   // rentExpires
 });

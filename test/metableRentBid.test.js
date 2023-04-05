@@ -4,7 +4,6 @@ const LAND = "land";
 const BUILD = "build";
 const PriceSale = "30000000000000000000";
 const PriceRent = "3000000000000000000";
-const newPriceSale = "45000000000000000000";
 
 describe("MetableRentBid methods", async function () {
   before(async function () {
@@ -39,7 +38,7 @@ describe("MetableRentBid methods", async function () {
     await this.metable.Mint(LAND, "land", Meta2, 3, 0, PriceSale, 1);//2
     await this.metable.Mint(BUILD, "school", Meta3, 6, 3, PriceSale, 1);//3
     await this.metable.Mint(BUILD, "hospital", Meta4, 8, 2, PriceSale, 1);//4
-    await this.metable.Mint(BUILD, "hospital", Meta5, 8, 0, PriceSale, 1);//5
+    await this.metable.Mint(BUILD, "hospital", Meta5, 8, 3, PriceSale, 1);//5
     await this.metable.Mint(BUILD, "school", Meta6, 6, 0, PriceSale, 1);//6
 
   });
@@ -49,10 +48,50 @@ describe("MetableRentBid methods", async function () {
     // owner1 buys token 3, a school with 3 rent slots
     await this.metable.buyNFT(3);
     await this.metable.setRentBid(3, PriceRent, 1, 1);
+    let bidList = await this.metable.listRentBid(0, 10);
+    expect(bidList[0].ID).to.be.equal(3);
+  });
+
+  it('should not be possible to setRentBid with price = 0', async function () {
+    await expect(this.metable.setRentBid(3, "0", 1, 1)).to.be.revertedWith("setRentBid::Price is zero");
+  });
+
+  it('should not be possible to setRentBid with period = 0', async function () {
+    await expect(this.metable.setRentBid(3, PriceRent, 0, 1)).to.be.revertedWith("setRentBid::Period is zero");
   });
   // removeRentBid
-  // buyRentBid
-  // buyRentSchoolBid
+  it('should be possible to removeRentBid', async function () {
+    await this.metable.buyNFT(4);
+    await this.metable.setRentBid(4, PriceRent, 1, 1);
+    var bidList = await this.metable.listRentBid(0, 10);
+    expect(bidList[1].ID).to.be.equal(4);
+    expect(bidList.length).to.be.equal(2);
+    await this.metable.removeRentBid(4);
+    bidList = await this.metable.listRentBid(0, 10);
+    expect(bidList.length).to.be.equal(1);
+  });
+
+  it('should be not possible to removeRentBid if not owner', async function () {
+    let met2 = this.metable.connect(this.owner2);
+    await expect(met2.removeRentBid(3)).to.be.revertedWith("Error NFT owner");
+  });
+
+  it('should be possible to buyRentBid', async function () {
+    await this.metable.buyNFT(5);
+    await this.metable.setRentBid(5, PriceRent, 1, 1);
+    // this.owner2 asks for rent
+    let met2 = await this.metable.connect(this.owner2);
+    await met2.setRentAsk(5, PriceRent, 1);
+    // index seems to have no effect
+    await met2.buyRentBid(5, 1);
+  });
+  it('should be possible to buyRentSchoolBid', async function () {
+    let info = await this.metable.getInfo(3);
+    console.log(info);
+    let met2 = await this.metable.connect(this.owner2);
+    await this.course.Mint("CourseMetadata1");
+    await this.metable.buyRentSchoolBid(3,1,1);
+  });
   // lengthRentBid
   // listRentBid
 });
