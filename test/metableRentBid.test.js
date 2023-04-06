@@ -87,7 +87,6 @@ describe("MetableRentBid methods", async function () {
   });
   it('should be possible to buyRentSchoolBid', async function () {
     let info = await this.metable.getInfo(3);
-    console.log(info);
     let met2 = await this.metable.connect(this.owner2);
     await this.course.Mint("CourseMetadata1");
     await this.metable.buyRentSchoolBid(3,1,1);

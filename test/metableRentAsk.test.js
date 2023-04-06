@@ -42,11 +42,10 @@ describe("MetableRentAsk methods", async function () {
     await this.metable.Mint(BUILD, "school", Meta6, 6, 0, PriceSale, 1);//6
 
   });
-
-  // setRentAsk
-  // removeRentAsk
-  // approveRentAsk
-  // lengthRentAsk
-  // listRentAsk
+  it('should possible to rentAsk', async function(){});
+  it('should possible to removeRentAsk', async function(){});
+  it('should possible to approveRentAsk', async function(){});
+  it('should possible to lengthRentAsk', async function(){});
+  it('should possible to listRentAsk', async function(){});
   
 });

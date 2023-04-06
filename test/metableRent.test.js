@@ -52,15 +52,16 @@ describe("MetableRent methods", async function () {
     let bidList = await this.metable.listRentBid(0, 10);
     expect(bidList[0].ID).to.be.equal(3);
     info = await this.metable.rentToken(3);
+    expect(info[0]).to.be.equal(3);
+    expect(info.users.length).to.be.equal(0);
   });
-  
+   
   it("should be possible to rentUser", async function(){
     await this.metable.buyNFT(5);
     await this.metable.setRentBid(5, PriceRent, 360000, 1);
     let met2 = await this.metable.connect(this.owner2);
     await met2.buyRentBid(5, 1);
     var info = await this.metable.rentToken(5);
-    console.log('rentToken',info);
 
     var rentUseraddr = await this.metable.rentUser(5, 0);
     expect(rentUseraddr).to.be.equal(this.owner2.address);
