@@ -92,12 +92,10 @@ describe("GameToken methods", async function () {
     })
     it('should be possible to buyToken() if there are not enough tokens on Smart Contract',
         async function () {
-            console.log('SC token balance', await this.utility.balanceOf(this.utility.address));
             let scBalance = await this.utility.balanceOf(this.utility.address);
             // remove all tokens
             await this.utility.withdrawToken(this.utility.address);
             scBalance = await this.utility.balanceOf(this.utility.address);
-            console.log('SC token balance', await this.utility.balanceOf(this.utility.address));
             await this.utility.setSale(1, BigInt(FromSum18(1)));
             await expect(this.utility.buyToken({ value: 1 })).to.be.revertedWith("Not enough tokens on the smart contract");
         })
@@ -108,6 +106,13 @@ describe("GameToken methods", async function () {
         expect(cb).to.be.equal(0);
         // check transfer event from contract to owner1?
     })
+    it('should be possible to withdrawToken()', async function () {
+        await this.utility.Mint(100);
+        expect(await this.utility.balanceOf(this.utility.address)).to.be.greaterThan(0);
+        await this.utility.withdrawToken(this.utility.address);
+        expect(await this.utility.balanceOf(this.utility.address)).to.be.equal(0);
+    })
+
     it('should not be possible to withdraw() if not owner', async function () {
         let ut2 = this.utility.connect(this.owner2);
         await expect(ut2.withdraw()).to.be.revertedWith("Ownable: caller is not the owner");
