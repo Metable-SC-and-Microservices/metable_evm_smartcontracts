@@ -38,7 +38,7 @@ describe("GameToken methods", async function () {
 
         await this.utility.SmartTransferTo(this.owner1.address,
             this.owner2.address, "10");
-        
+
     })
 
     it('should not be possible to SmartTransferTo if caller is not onlySmart', async function () {
@@ -50,17 +50,31 @@ describe("GameToken methods", async function () {
             .revertedWith("Error smart allower")
     })
 
-    it('should be possible to transferToken', async function() {
+    it('should be possible to transferToken', async function () {
         this.utility.Mint("1000000000000000000000");
         expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(0);
         // from smart contract to address
         this.utility.transferToken(this.owner1.address, "10");
         expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(10);
     })
-    it('should not be possible to transferToken if not owner', async function() {
+    it('should not be possible to transferToken if not owner', async function () {
         this.utility.Mint("1000000000000000000000");
         let ut2 = await this.utility.connect(this.owner2);
         await expect(ut2.transferToken(this.owner1.address, "10")).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it('should be possible to setSale', async function () {
+        await this.utility.Mint("1");
+        await this.utility.setSale("1", BigInt("1000000000000000000"));
+        expect(await this.utility.SalePrice()).to.be.equal(("1000000000000000000"));
+        expect(await this.utility.SaleAmount()).to.be.equal(BigInt(""));
+    })
+
+    it('should be possible to buyToken()', async function () {
+        //{value:ethers.utils.parseEther("0.5")}
+        // await this.utility.setSale("1", 1);
+        console.log(await this.utility.SaleAmount());
+        await this.utility.buyToken({ value: ethers.utils.parseEther("1.0") })
     })
 
 });
