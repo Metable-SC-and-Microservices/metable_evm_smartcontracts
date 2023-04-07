@@ -1,6 +1,8 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-
+function FromSum18(Sum) {
+    return hre.ethers.utils.parseUnits(String(Sum), 18);
+}
 describe("GameToken methods", async function () {
     before(async function () {
         [this.owner1, this.owner2] = await ethers.getSigners();
@@ -10,9 +12,9 @@ describe("GameToken methods", async function () {
 
     it('should be possible to Mint() gametokens', async function () {
         expect(await this.utility.balanceOf(this.utility.address)).to.be.equal(0);
-        this.utility.Mint("1000000000000000000000");
+        this.utility.Mint("10");
         let bal = await this.utility.balanceOf(this.utility.address);
-        expect(bal).to.be.equal("1000000000000000000000");
+        expect(bal).to.be.equal("10");
 
     });
 
@@ -51,30 +53,64 @@ describe("GameToken methods", async function () {
     })
 
     it('should be possible to transferToken', async function () {
-        this.utility.Mint("1000000000000000000000");
+        this.utility.Mint("10");
         expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(0);
-        // from smart contract to address
         this.utility.transferToken(this.owner1.address, "10");
         expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(10);
     })
     it('should not be possible to transferToken if not owner', async function () {
-        this.utility.Mint("1000000000000000000000");
+        this.utility.Mint("10");
         let ut2 = await this.utility.connect(this.owner2);
         await expect(ut2.transferToken(this.owner1.address, "10")).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     it('should be possible to setSale', async function () {
-        await this.utility.Mint("1");
-        await this.utility.setSale("1", BigInt("1000000000000000000"));
-        expect(await this.utility.SalePrice()).to.be.equal(("1000000000000000000"));
-        expect(await this.utility.SaleAmount()).to.be.equal(BigInt(""));
+        await this.utility.Mint(100);
+        await this.utility.setSale(100, BigInt(FromSum18(2)));
+        expect(await this.utility.SalePrice()).to.be.equal(("2000000000000000000"));
+        expect(await this.utility.SaleAmount()).to.be.equal(BigInt("100"));
     })
 
     it('should be possible to buyToken()', async function () {
-        //{value:ethers.utils.parseEther("0.5")}
-        // await this.utility.setSale("1", 1);
-        console.log(await this.utility.SaleAmount());
-        await this.utility.buyToken({ value: ethers.utils.parseEther("1.0") })
+        let buy = await this.utility.buyToken({ value: 2 });
+        let receipt = await buy.wait();
+        // console.log(receipt.events?.filter((x) => { return x.event == "Transfer" }));
+        expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(11);
+    })
+
+    it('should be possible to buyToken() if SalePrice=0', async function () {
+        await this.utility.setSale(100, BigInt(FromSum18(0)));
+        await expect(this.utility.buyToken({ value: 2 })).to.be.revertedWith("Sale Price is zero");
+    })
+    it('should be possible to buyToken() if needAmount=0', async function () {
+        await this.utility.setSale(100, BigInt(FromSum18(2)));
+        await expect(this.utility.buyToken({ value: 1 })).to.be.revertedWith("Need Amount is zero");
+    })
+    it('should be possible to buyToken() if SaleAmount >= needAmount', async function () {
+        await this.utility.setSale(1, BigInt(FromSum18(1)));
+        await expect(this.utility.buyToken({ value: 2 })).to.be.revertedWith("Not enough tokens on the Sale");
+    })
+    it('should be possible to buyToken() if there are not enough tokens on Smart Contract',
+        async function () {
+            console.log('SC token balance', await this.utility.balanceOf(this.utility.address));
+            let scBalance = await this.utility.balanceOf(this.utility.address);
+            // remove all tokens
+            await this.utility.withdrawToken(this.utility.address);
+            scBalance = await this.utility.balanceOf(this.utility.address);
+            console.log('SC token balance', await this.utility.balanceOf(this.utility.address));
+            await this.utility.setSale(1, BigInt(FromSum18(1)));
+            await expect(this.utility.buyToken({ value: 1 })).to.be.revertedWith("Not enough tokens on the smart contract");
+        })
+
+    it('should be possible to withdraw()', async function () {
+        await this.utility.withdraw();
+        const cb = await ethers.provider.getBalance(this.utility.address)
+        expect(cb).to.be.equal(0);
+        // check transfer event from contract to owner1?
+    })
+    it('should not be possible to withdraw() if not owner', async function () {
+        let ut2 = this.utility.connect(this.owner2);
+        await expect(ut2.withdraw()).to.be.revertedWith("Ownable: caller is not the owner");
     })
 
 });
