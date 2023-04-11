@@ -35,7 +35,7 @@ describe("GameToken methods", async function () {
         await expect(ut2.MintTo(this.owner2.address, "10")).to.be.revertedWith("Ownable: caller is not the owner")
     });
 
-    it('should  be possible to SmartTransferTo if caller is onlySmart', async function () {
+    it('should be possible to SmartTransferTo if caller is onlySmart', async function () {
         await this.utility.setSmart(this.owner1.address)
 
         await this.utility.SmartTransferTo(this.owner1.address,
@@ -53,13 +53,13 @@ describe("GameToken methods", async function () {
     })
 
     it('should be possible to transferToken', async function () {
-        this.utility.Mint("10");
+        await this.utility.Mint("10");
         expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(0);
-        this.utility.transferToken(this.owner1.address, "10");
+        await this.utility.transferToken(this.owner1.address, "10");
         expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(10);
     })
     it('should not be possible to transferToken if not owner', async function () {
-        this.utility.Mint("10");
+        await this.utility.Mint("10");
         let ut2 = await this.utility.connect(this.owner2);
         await expect(ut2.transferToken(this.owner1.address, "10")).to.be.revertedWith("Ownable: caller is not the owner");
     });

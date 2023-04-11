@@ -47,6 +47,10 @@ describe("MetableSale methods", async function () {
     expect(await this.metable.ownerOf(6)).to.be.equal(this.owner1.address);
   });
 
+  it("should not be possible to buy an NFT if id does not exist", async function () {
+    await expect( this.metable.buyNFT(7)).to.be.revertedWith("EnumerableMap: nonexistent key");
+  });
+
   it("should be possible to put an NFT on sale", async function () {
     await this.metable.buyNFT(1);
     await this.metable.setSale(1, newPriceSale);
