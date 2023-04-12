@@ -75,7 +75,7 @@ describe("Tickets methods", function () {
     await this.course.Mint("{number:5}");
     await tickets.issueTickets(5, 100, PriceTicket)
     await this.metable.buyNFT(6);//school
-    await tickets.approveTickets(6, 5);
+    await expect(tickets.approveTickets(6, 5)).to.not.be.reverted;
   });
   it('should not be possible to approveTickets() if amount = 0', async function () {
     const tickets = await this.ticketsFactory.deploy(this.metable.address, this.utility.address, this.course.address);
@@ -98,7 +98,7 @@ describe("Tickets methods", function () {
   // SmartTransferTo
   // TODO
 
-  it('should be possible to buyTickets()', async function () {
+  it('is possible to buyTickets()', async function () {
     const tickets = await this.ticketsFactory.deploy(this.metable.address, this.utility.address, this.course.address);
     await this.course.Mint("{number:8}");
     await tickets.issueTickets(8, 1, PriceTicket);
@@ -109,5 +109,22 @@ describe("Tickets methods", function () {
     let events = receipt.events?.filter((x) => { return x.event == "TransferSingle" }); 
     expect(events.length).to.be.greaterThan(0);
   });
+  it('should not be possible to buyTickets() if there are not enough tickets', async function () {
+    const tickets = await this.ticketsFactory.deploy(this.metable.address, this.utility.address, this.course.address);
+    await this.course.Mint("{number:9}");
+    await tickets.issueTickets(9, 1, PriceTicket);
+    await tickets.approveTickets(3, 9); // nftid, courseid
+    await this.utility.setSmart(tickets.address);
+    await expect(tickets.buyTickets(9, 2)).to.be.revertedWith('buyTickets::Not enough tickets on a smart contract');
+  });
+  // price = 0, cannot be tested since Price is checked on issuing
+  // it('should not be possible to buyTickets() if price = 0', async function () {
+  //   const tickets = await this.ticketsFactory.deploy(this.metable.address, this.utility.address, this.course.address);
+  //   await this.course.Mint("{number:9}");
+  //   await tickets.issueTickets(9, 0, PriceTicket);
+  //   await tickets.approveTickets(3, 9); // nftid, courseid
+  //   await this.utility.setSmart(tickets.address);
+  //   await expect(tickets.buyTickets(9, 0)).to.be.revertedWith('buyTickets::Amount is zero');
+  // });
 
 });
