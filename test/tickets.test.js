@@ -18,6 +18,7 @@ describe("Tickets methods", function () {
     this.course = await this.courseNFT.deploy();
     this.metable = await this.metableFactory.deploy(this.utility.address, this.course.address,);
     await this.utility.setSmart(this.metable.address);
+    await this.utility.setSmart(this.course.address);
     await this.utility.Mint("1000000000000000000000");
     await this.utility.setSale("500000000000000000000", PriceToken);
     await this.utility.buyToken({ value: 200 * PriceToken });
@@ -35,6 +36,7 @@ describe("Tickets methods", function () {
     await this.metable.Mint(BUILD, "hospital", Meta4, 8, 2, PriceSale, 1);//4
     await this.metable.Mint(BUILD, "hospital", Meta5, 8, 0, PriceSale, 1);//5
     await this.metable.Mint(BUILD, "school", Meta6, 6, 0, PriceSale, 1);//6
+    await this.metable.Mint(BUILD, "school", Meta6, 6, 0, PriceSale, 1);//7
 
   });
 
@@ -82,10 +84,30 @@ describe("Tickets methods", function () {
     await this.metable.buyNFT(3);//school
     await tickets.approveTickets(3, 6); // nftid, courseid
     // tickets issued = 1, buying another should not be possible
-    await expect(tickets.approveTickets(3, 6)).to.be.revertedWith('approveTickets::Error amount issue'); 
+    await expect(tickets.approveTickets(3, 6)).to.be.revertedWith('approveTickets::Error amount issue');
   });
+  it('should not be possible to approveTickets() if not school owner', async function () {
+    const tickets = await this.ticketsFactory.deploy(this.metable.address, this.utility.address, this.course.address);
+    await this.course.Mint("{number:7}");
+    await tickets.issueTickets(7, 1, PriceTicket)
+    await this.metable.buyNFT(7);//schoolid = 7
+    const t2 = await tickets.connect(this.owner2);
+    await expect(t2.approveTickets(7, 7)).to.be.revertedWith('approveTickets::Error school owner');
+  });
+
   // SmartTransferTo
   // TODO
-  it('should be possible to buyTickets()', async function () { });
+
+  it('should be possible to buyTickets()', async function () {
+    const tickets = await this.ticketsFactory.deploy(this.metable.address, this.utility.address, this.course.address);
+    await this.course.Mint("{number:8}");
+    await tickets.issueTickets(8, 1, PriceTicket);
+    await tickets.approveTickets(3, 8); // nftid, courseid
+    await this.utility.setSmart(tickets.address);
+    let transfer = await tickets.buyTickets(8, 1);
+    let receipt = await transfer.wait();
+    let events = receipt.events?.filter((x) => { return x.event == "TransferSingle" }); 
+    expect(events.length).to.be.greaterThan(0);
+  });
 
 });
