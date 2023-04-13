@@ -93,6 +93,44 @@ describe("MetableVesting methods", async function () {
             .be
             .rejectedWith("Error timeStart");
     });
+    it('should not be possibile to setSale() if timeStart<=timeExpires', async function () {
+        let governance = await this.governanceTokenFactory.deploy(FromSum18(1e6));
+        await governance.Mint(5000);
+        let TokenUSD = await this.usdFactory.deploy();
+        await TokenUSD.Mint(FromSum18(1000));
+        let Price = FromSum18(2);
+        let SaleStart = 1000 + (await time.latest()) ;
+        let timeCliff = SaleStart + 2000;
+        let vesting = await this.vestingFactory.deploy();
+        await vesting.setCoin(TokenUSD.address, FromSum18(1));
+        await expect(vesting.setSale(governance.address, FromSum18(5000),
+            Price,
+            SaleStart, SaleStart - 1000,
+            timeCliff, 7,
+            100, 10000))
+            .to
+            .be
+            .rejectedWith("Error timeExpires");
+    });
+    it('should not be possibile to setSale() if timeExpires<=timeCliff', async function () {
+        let governance = await this.governanceTokenFactory.deploy(FromSum18(1e6));
+        await governance.Mint(5000);
+        let TokenUSD = await this.usdFactory.deploy();
+        await TokenUSD.Mint(FromSum18(1000));
+        let Price = FromSum18(2);
+        let SaleStart = 1000 + (await time.latest()) ;
+        let timeCliff = SaleStart + 999;
+        let vesting = await this.vestingFactory.deploy();
+        await vesting.setCoin(TokenUSD.address, FromSum18(1));
+        await expect(vesting.setSale(governance.address, FromSum18(5000),
+            Price,
+            SaleStart,SaleStart + 1000,
+            timeCliff, 7,
+            100, 10000))
+            .to
+            .be
+            .rejectedWith("Error timeCliff");
+    });
 
     it('should buyToken()', async function () {
 
