@@ -4,6 +4,9 @@ const { time } = require("@nomicfoundation/hardhat-network-helpers");
 function FromSum18(Sum) {
     return hre.ethers.utils.parseUnits(String(Sum), 18);
 }
+function ToString(BigSum) {
+    return BigSum.toString();
+}
 
 describe("MetableVesting methods", async function () {
 
@@ -24,7 +27,7 @@ describe("MetableVesting methods", async function () {
         await expect(vesting.setCoin(TokenUSD.address, FromSum18(1))).to.not.be.reverted;
     });
 
-    it('should setSale()', async function () {
+    it('should setSale()/getSale()', async function () {
         let governance = await this.governanceTokenFactory.deploy(FromSum18(1e6));
         await governance.Mint(5000);
         let TokenUSD = await this.usdFactory.deploy();
@@ -289,13 +292,81 @@ describe("MetableVesting methods", async function () {
         expect(await governance.balanceOf(this.owner1.address)).to.be.equal(FromSum18(10));
         expect(await governance.balanceOf(vesting.address)).to.be.equal(FromSum18(4990))
     });
+    it('should not be possbile to withdraw more than once in the same cliff period', async function () {
+        let governance = await this.governanceTokenFactory.deploy(FromSum18(1e6));
+        let TokenUSD = await this.usdFactory.deploy();
+        await TokenUSD.Mint(FromSum18(1000));
+
+        let Price = FromSum18(2);
+        let SaleStart = 1000 + (await time.latest());
+        let timeCliff = SaleStart + 2000;
+        let vesting = await this.vestingFactory.deploy();
+        await governance.Mint(FromSum18(5000));
+        let balance = await governance.balanceOf(governance.address);
+        expect(balance).to.be.equal("5000000000000000000000"); // BigNumber { value: "5000" }
+        await governance.transferToken(vesting.address, FromSum18(5000));
+
+        await vesting.setCoin(TokenUSD.address, FromSum18(1));
+        await vesting.setSale(governance.address, FromSum18(5000), Price, SaleStart, SaleStart + 1000, timeCliff, 7, 100, 10000);
+        await time.increaseTo(SaleStart + 2);
+        await TokenUSD.approve(vesting.address, FromSum18(1000));
+        await vesting.buyToken(governance.address, SaleStart, TokenUSD.address, FromSum18(100));
+        await time.increaseTo(timeCliff + 1);
+        await vesting.withdraw(governance.address, SaleStart);
+        await expect(vesting.withdraw(governance.address, SaleStart))
+            .to
+            .be
+            .revertedWith('There is nothing to withdraw');
+    });
+
+    it('should withdrawCoins()', async function () {
+        let governance = await this.governanceTokenFactory.deploy(FromSum18(1e6));
+        let TokenUSD = await this.usdFactory.deploy();
+        await TokenUSD.Mint(FromSum18(1000));
+        let Price = FromSum18(2);
+        let SaleStart = 1000 + (await time.latest());
+        let timeCliff = SaleStart + 2000;
+        let vesting = await this.vestingFactory.deploy();
+        await governance.Mint(FromSum18(5000));
+
+        let balance = await governance.balanceOf(governance.address);
+        expect(balance).to.be.equal("5000000000000000000000"); // BigNumber { value: "5000" }
+        await governance.transferToken(vesting.address, FromSum18(5000));
+        await TokenUSD.transfer(vesting.address, FromSum18(1000));
+
+        await vesting.withdrawCoins(TokenUSD.address);
+        expect(await TokenUSD.balanceOf(this.owner1.address)).to.be.equal(FromSum18(1000));
+    })
+    it('should balanceOf()', async function () {
+        let governance = await this.governanceTokenFactory.deploy(FromSum18(1e6));
+        let TokenUSD = await this.usdFactory.deploy();
+        await TokenUSD.Mint(FromSum18(1000));
+        let Price = FromSum18(2);
+        let SaleStart = 1000 + (await time.latest());
+        let timeCliff = SaleStart + 2000;
+        let vesting = await this.vestingFactory.deploy();
+        await governance.Mint(FromSum18(5000));
+
+        let balance = await governance.balanceOf(governance.address);
+
+        expect(balance).to.be.equal("5000000000000000000000"); // BigNumber { value: "5000" }
+        await governance.transferToken(vesting.address, FromSum18(5000));
+
+        await vesting.setCoin(TokenUSD.address, FromSum18(1));
+        await vesting.setSale(governance.address, FromSum18(5000), Price, SaleStart, SaleStart + 1000, timeCliff, 7, 100, 10000);
+        await time.increaseTo(SaleStart + 2);
+        await TokenUSD.approve(vesting.address, FromSum18(1000));
+        await vesting.buyToken(governance.address, SaleStart, TokenUSD.address, FromSum18(100));
+        await time.increaseTo(timeCliff + 1);
+        await vesting.withdraw(governance.address, SaleStart); // 100 - 10 cliff
+        expect(await vesting.balanceOf(governance.address, SaleStart)).to.be.equal(FromSum18(90));
+    })
     /*
-    withdraw
-    
-    withdrawCoins
-    withdrawEth
-    balanceOf
+    withdrawEth */
+    /*
     getSale
     */
+    
+    
 
 })
