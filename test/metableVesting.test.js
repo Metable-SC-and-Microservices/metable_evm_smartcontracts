@@ -4,9 +4,6 @@ const { time } = require("@nomicfoundation/hardhat-network-helpers");
 function FromSum18(Sum) {
     return hre.ethers.utils.parseUnits(String(Sum), 18);
 }
-function ToString(BigSum) {
-    return BigSum.toString();
-}
 
 describe("MetableVesting methods", async function () {
 
@@ -362,11 +359,6 @@ describe("MetableVesting methods", async function () {
         expect(await vesting.balanceOf(governance.address, SaleStart)).to.be.equal(FromSum18(90));
     })
     /*
-    withdrawEth */
-    /*
-    getSale
+    withdrawEth not testable?
     */
-    
-    
-
 })
