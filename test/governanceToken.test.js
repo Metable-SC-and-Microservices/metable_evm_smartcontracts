@@ -6,7 +6,7 @@ function FromSum18(Sum) {
 describe("GovernanceNFT methods", async function () {
     before(async function () {
 
-        [this.owner1, this.owner2] = await ethers.getSigners();
+        [this.owner1, this.owner2, this.alice, this.bob] = await ethers.getSigners();
         this.governanceToken = await ethers.getContractFactory("contracts/GovernanceToken.sol:GovernanceToken"); //  for buy things
         this.stakingFactory = await ethers.getContractFactory("contracts/Staking.sol:Staking"); //  for buy things
         // this.governance = await this.governanceToken.deploy(FromSum18(1e6));
@@ -52,11 +52,16 @@ describe("GovernanceNFT methods", async function () {
         expect(await this.governance.balanceOf(this.owner1.address)).to.be.equal(20);
     })
     it('should be possible to SmartTransferTo', async function () {
-        await this.governance.Mint("10");
         let governance = await this.governanceToken.deploy(FromSum18(1e6));
-        let staking = await this.stakingFactory.deploy(governance.address);
-        await governance.setSmart(staking.address); // from common.js, why?
-        // to be continued...
+        await governance.Mint("10");
+        await governance.transferToken(this.owner1.address, "10");
+        console.log('balance owner1', await governance.balanceOf(this.owner1.address));
+        await governance.setSmart(this.owner1.address);
+        await governance.SmartTransferTo(this.owner1.address,
+            this.alice.address, "10");
+        await governance.SmartTransferTo(this.alice.address,
+            this.bob.address, "10");
+        expect(await governance.balanceOf(this.bob.address)).to.be.equal("10");
     })
     it('should not be possible to transferToken if not owner', async function () {
         await this.governance.Mint("10");
