@@ -3,11 +3,15 @@ const { ethers } = require("hardhat");
 function FromSum18(Sum) {
     return hre.ethers.utils.parseUnits(String(Sum), 18);
 }
+var PriceUSD = "2000000000000000000";
+
 describe("GameToken methods", async function () {
     before(async function () {
         [this.owner1, this.owner2] = await ethers.getSigners();
         this.gameToken = await ethers.getContractFactory("contracts/GameToken.sol:GameToken"); //  for buy things
         this.utility = await this.gameToken.deploy();
+        this.usdFactory = await ethers.getContractFactory("contracts/usdtest.sol:USDTest");
+
     });
 
     it('should be possible to Mint() gametokens', async function () {
@@ -71,11 +75,31 @@ describe("GameToken methods", async function () {
         expect(await this.utility.SaleAmount()).to.be.equal(BigInt("100"));
     })
 
+    it('should be possible to setSmartSale()', async function () {
+        let TokenUSD = await this.usdFactory.deploy();
+        await TokenUSD.Mint(FromSum18(1000));
+        await TokenUSD.transfer(this.owner1.address, FromSum18(1000));
+        expect(await this.utility.setSmartSale(TokenUSD.address, PriceUSD)).not.to.be.reverted;
+    })
+    it('should be possible to buyToken2()', async function () {
+        let TokenUSD = await this.usdFactory.deploy();
+        await TokenUSD.Mint(FromSum18(2000));
+        await this.utility.Mint(100);
+        await this.utility.setSale(10000000, BigInt(FromSum18(2)));
+        await TokenUSD.transfer(this.owner1.address, FromSum18(1000));
+        await this.utility.setSmartSale(TokenUSD.address, BigInt(FromSum18(2)));
+        await TokenUSD.approve(this.utility.address,"100000000000000000000");
+
+        await this.utility.buyToken2(TokenUSD.address, 100);
+        expect(await this.utility.SaleAmount()).to.be.equal(9999900);
+
+    })
+
     it('should be possible to buyToken()', async function () {
         let buy = await this.utility.buyToken({ value: 2 });
         let receipt = await buy.wait();
         // console.log(receipt.events?.filter((x) => { return x.event == "Transfer" }));
-        expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(11);
+        expect(await this.utility.balanceOf(this.owner1.address)).to.be.equal(111);
     })
 
     it('should be possible to buyToken() if SalePrice=0', async function () {
@@ -117,6 +141,8 @@ describe("GameToken methods", async function () {
         let ut2 = this.utility.connect(this.owner2);
         await expect(ut2.withdraw()).to.be.revertedWith("Ownable: caller is not the owner");
     })
+
+
 
 });
 

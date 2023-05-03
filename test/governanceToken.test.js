@@ -55,7 +55,6 @@ describe("GovernanceNFT methods", async function () {
         let governance = await this.governanceToken.deploy(FromSum18(1e6));
         await governance.Mint("10");
         await governance.transferToken(this.owner1.address, "10");
-        console.log('balance owner1', await governance.balanceOf(this.owner1.address));
         await governance.setSmart(this.owner1.address);
         await governance.SmartTransferTo(this.owner1.address,
             this.alice.address, "10");
